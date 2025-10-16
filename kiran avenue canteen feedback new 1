@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen Food Feedback System</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Inter Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .star-rating { cursor: pointer; transition: color 0.2s; }
+        .star-rating.active, .star-rating:hover { color: #facc15; }
+        /* Style for the expand/collapse sections */
+        .meal-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+        .meal-content.open { max-height: 1000px; /* Large enough for content */ }
+    </style>
+</head>
+<body>
+
+<div class="max-w-4xl mx-auto p-4 md:p-8">
+    <header class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-1">Kiran Avenue Canteen Feedback</h1>
+        <p class="text-lg text-gray-600">Thank you for your valuable feedback!</p>
+    </header>
+
+    <!-- Global State & Auth Check Loading Indicator -->
+    <div id="loading-indicator" class="text-center p-6 bg-white rounded-xl shadow-lg mb-6">
+        <p class="text-gray-500 font-medium">System is loading... Please wait.</p>
+    </div>
+
+    <!-- Main Tabs (Updated to Full English) -->
+    <div id="main-app" class="hidden">
+        <div class="flex bg-white p-1 rounded-xl shadow-md mb-6">
+            <button id="tab-today" class="flex-1 py-3 text-center rounded-lg text-sm md:text-base font-semibold transition-colors bg-blue-600 text-white">
+                Today's Feedback
+            </button>
+            <button id="tab-previous" class="flex-1 py-3 text-center rounded-lg text-sm md:text-base text-gray-700 hover:bg-gray-100 transition-colors">
+                Past Results
+            </button>
+        </div>
+
+        <!-- Section 1: Today's Feedback Form -->
+        <div id="feedback-section" class="bg-white p-6 rounded-xl shadow-lg space-y-6">
+            <!-- Updated Heading to Full English -->
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4 flex flex-col items-start">
+                <div class="flex items-center mb-1">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-2 text-blue-600"></i>
+                    <span>Today's Meal Review</span>
+                </div>
+                <span class="text-base font-normal text-gray-600 ml-7">Date: <span id="current-date" class="font-medium text-blue-600"></span></span>
+            </h2>
+
+            <!-- NEW SECTION: Today's Summary (Based on image) -->
+            <div id="today-summary" class="mb-6 space-y-4">
+                <div class="flex justify-between items-end">
+                    <p class="text-lg font-bold text-gray-800">Today's Overall Rating</p>
+                </div>
+                
+                <div class="flex justify-between items-end border-b pb-4">
+                    <span id="overall-rating-display" class="text-5xl font-extrabold text-blue-600 leading-none">0.0</span>
+                    <span id="review-count-display" class="text-sm text-gray-500">0 Reviews</span>
+                </div>
+                
+                <div class="space-y-2 text-base">
+                    <p>Breakfast: <span id="summary-breakfast" class="font-semibold text-amber-600">0.0</span></p>
+                    <p>Lunch: <span id="summary-lunch" class="font-semibold text-green-600">0.0</span></p>
+                    <p>Dinner: <span id="summary-dinner" class="font-semibold text-indigo-600">0.0</span></p>
+                    <p>Combo: <span id="summary-combo" class="font-semibold text-red-600">0.0</span></p>
+                </div>
+            </div>
+            <!-- END NEW SECTION -->
+
+            <!-- User Name Input (Required) -->
+            <div id="name-input-container" class="space-y-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <label for="user-name" class="block text-sm font-medium text-gray-700">Your Name (Required for submission):</label>
+                <input type="text" id="user-name" required maxlength="50" placeholder="Please enter your name"
+                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <!-- Submission Status Message -->
+            <div id="submission-status" class="hidden p-4 rounded-lg text-center font-semibold text-white transition-opacity duration-300"></div>
+
+            <!-- Feedback Form Sections -->
+            <form id="feedback-form" class="space-y-4">
+                <!-- Breakfast Section -->
+                <div id="breakfast-section" class="meal-group border border-gray-200 rounded-xl">
+                    <!-- Title/Header (Full English) -->
+                    <div class="meal-header flex justify-between items-center p-4 bg-gray-50 rounded-t-xl cursor-pointer hover:bg-gray-100 transition-colors" data-meal="breakfast">
+                        <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                            <i data-lucide="coffee" class="w-5 h-5 mr-2 text-amber-600"></i> Breakfast
+                        </h3>
+                        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-300"></i>
+                    </div>
+                    <!-- Content -->
+                    <div class="meal-content p-4">
+                        <div id="breakfast-rating-container" class="space-y-4">
+                            <!-- JS will populate star ratings here -->
+                        </div>
+                        <div class="mt-4">
+                            <label for="breakfast-comment" class="block text-sm font-medium text-gray-700">Comment (Optional, max 50 words):</label>
+                            <textarea id="breakfast-comment" rows="2" maxlength="250" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:border-blue-500 focus:ring-blue-500" placeholder="Write your feedback about breakfast here."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lunch Section -->
+                <div id="lunch-section" class="meal-group border border-gray-200 rounded-xl">
+                    <div class="meal-header flex justify-between items-center p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors" data-meal="lunch">
+                        <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                            <i data-lucide="soup" class="w-5 h-5 mr-2 text-green-600"></i> Lunch
+                        </h3>
+                        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-300"></i>
+                    </div>
+                    <div class="meal-content p-4">
+                        <div id="lunch-rating-container" class="space-y-4">
+                            <!-- JS will populate detailed ratings here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dinner Section -->
+                <div id="dinner-section" class="meal-group border border-gray-200 rounded-xl">
+                    <div class="meal-header flex justify-between items-center p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors" data-meal="dinner">
+                        <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                            <i data-lucide="utensils" class="w-5 h-5 mr-2 text-indigo-600"></i> Dinner
+                        </h3>
+                        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-300"></i>
+                    </div>
+                    <div class="meal-content p-4">
+                        <div id="dinner-rating-container" class="space-y-4">
+                            <!-- JS will populate detailed ratings here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combo Section -->
+                <div id="combo-section" class="meal-group border border-gray-200 rounded-xl">
+                    <div class="meal-header flex justify-between items-center p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors" data-meal="combo">
+                        <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                            <i data-lucide="package" class="w-5 h-5 mr-2 text-red-600"></i> Combo Feedback
+                        </h3>
+                        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-300"></i>
+                    </div>
+                    <div class="meal-content p-4">
+                        <div id="combo-rating-container" class="space-y-4">
+                            <!-- JS will populate single rating here -->
+                        </div>
+                        <div class="mt-4">
+                            <label for="combo-comment" class="block text-sm font-medium text-gray-700">Comment (Optional, max 50 words):</label>
+                            <textarea id="combo-comment" rows="2" maxlength="250" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:border-blue-500 focus:ring-blue-500" placeholder="Write your feedback about the combo here."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Submit Button (Full English) -->
+                <button type="submit" id="submit-feedback" class="w-full py-3 mt-8 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-colors disabled:bg-gray-400">
+                    Submit Feedback
+                </button>
+            </form>
+        </div>
+
+        <!-- Section 2: Previous Days' Results -->
+        <div id="results-section" class="hidden bg-white p-6 rounded-xl shadow-lg space-y-6">
+            <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4 flex items-center">
+                <i data-lucide="trending-up" class="w-5 h-5 mr-2 text-blue-600"></i> Average Results for Past Days
+            </h2>
+            <div id="past-results-list" class="space-y-4">
+                <!-- Past results will be displayed here -->
+            </div>
+            <div id="no-past-data" class="hidden text-center text-gray-500 p-4 border-dashed border-2 rounded-lg">
+                No past data available.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Viewing Comments -->
+    <div id="comment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Feedback for: <span id="modal-date" class="text-blue-600"></span></h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-800 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <!-- Admin View Toggle -->
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-2">Admin Password (to view names):</label>
+                    <div class="flex space-x-2">
+                        <input type="password" id="admin-password" placeholder="Enter password" class="flex-grow rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500">
+                        <button id="submit-admin-password" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">Unlock</button>
+                    </div>
+                    <p id="admin-error" class="text-red-500 text-sm mt-2 hidden">Incorrect password.</p>
+                </div>
+
+                <div id="modal-comments-container" class="space-y-4">
+                    <!-- Comments will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Firebase and App Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+    // Set Firestore debug logging
+    setLogLevel('debug'); 
+
+    // --- Global Variables and Configuration ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    const ADMIN_PASSWORD = "3fQ7pZ$wRk2^bX9@vMh$6gJ5yT"; // Admin Password updated by user
+
+    // Firestore paths
+    const PUBLIC_COLLECTION_PATH = `/artifacts/${appId}/public/data/canteen_feedback`;
+
+    let app, db, auth, userId = null;
+    let userName = localStorage.getItem('feedbackUserName') || ''; // Cache name in localStorage
+    
+    // UI Elements
+    const mainApp = document.getElementById('main-app');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const feedbackSection = document.getElementById('feedback-section');
+    const resultsSection = document.getElementById('results-section');
+    const submissionStatus = document.getElementById('submission-status');
+    const userNameInput = document.getElementById('user-name');
+    const nameInputContainer = document.getElementById('name-input-container');
+    const submitButton = document.getElementById('submit-feedback');
+    const currentDateElement = document.getElementById('current-date');
+    
+    // UI Elements for Today's Summary
+    const overallRatingDisplay = document.getElementById('overall-rating-display');
+    const reviewCountDisplay = document.getElementById('review-count-display');
+    const summaryBreakfast = document.getElementById('summary-breakfast');
+    const summaryLunch = document.getElementById('summary-lunch');
+    const summaryDinner = document.getElementById('summary-dinner');
+    const summaryCombo = document.getElementById('summary-combo');
+
+    // Date utility
+    const todayDate = new Date();
+    const todayISODate = todayDate.toISOString().split('T')[0];
+    const isSunday = todayDate.getDay() === 0;
+    
+    // Configuration for Lunch/Dinner Items: All 9 items are listed here.
+    const MEAL_ITEMS_CONFIG = [
+        { id: 'salad', label: 'Salad', needsDishName: false },
+        { id: 'veg1', label: 'Veg-1', needsDishName: true }, // Dish Name Required
+        { id: 'veg2', label: 'Veg-2', needsDishName: true }, // Dish Name Required
+        { id: 'rice', label: 'Rice', needsDishName: false },
+        { id: 'dal', label: 'Dal', needsDishName: false },
+        { id: 'roti', label: 'Roti/Bread', needsDishName: false },
+        { id: 'papad', label: 'Papad', needsDishName: false }, // Included
+        { id: 'pickle', label: 'Pickle', needsDishName: false }, // Included
+        { id: 'sweet', label: 'Sweet', needsDishName: false }, // Included
+    ];
+
+    // --- Utility Functions ---
+
+    /** Converts an ISO date string (YYYY-MM-DD) to a readable English format. */
+    const formatDateEN = (isoDate) => {
+        const date = new Date(isoDate);
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    /** Calculates the overall average rating for each meal type based on an array of submissions. */
+    const calculateAverages = (feedbackArray) => {
+        let totalBreakfast = 0, totalLunch = 0, totalDinner = 0, totalCombo = 0;
+        let countLunch = 0, countDinner = 0; // Separate counters for detailed meals
+
+        feedbackArray.forEach(data => {
+            // Breakfast Average (uses two ratings: breakfast, tea)
+            totalBreakfast += (data.breakfast.rating + data.breakfast.tea) / 2;
+
+            // Lunch Average (uses 9 detailed item ratings)
+            let lunchSum = 0;
+            // Use the config to iterate over all items to ensure all are counted for average
+            MEAL_ITEMS_CONFIG.map(item => item.id).forEach(key => {
+                lunchSum += data.lunch[key].rating;
+            });
+            totalLunch += lunchSum / MEAL_ITEMS_CONFIG.length;
+            countLunch++;
+
+            // Dinner Average (uses 9 detailed item ratings)
+            let dinnerSum = 0;
+            MEAL_ITEMS_CONFIG.map(item => item.id).forEach(key => {
+                dinnerSum += data.dinner[key].rating;
+            });
+            totalDinner += dinnerSum / MEAL_ITEMS_CONFIG.length;
+            countDinner++;
+            
+            // Combo Average
+            totalCombo += data.combo.rating;
+        });
+
+        const totalSubmissions = feedbackArray.length;
+
+        // Calculate Meal Averages
+        const avgBreakfast = totalSubmissions > 0 ? totalBreakfast / totalSubmissions : 0;
+        const avgLunch = countLunch > 0 ? totalLunch / countLunch : 0;
+        const avgDinner = countDinner > 0 ? totalDinner / countDinner : 0;
+        const avgCombo = totalSubmissions > 0 ? totalCombo / totalSubmissions : 0;
+
+        // Calculate Overall Average (Average of the 4 meal averages)
+        let overallSum = avgBreakfast + avgLunch + avgDinner;
+        let overallCount = 3;
+        if (!isSunday) {
+            overallSum += avgCombo;
+            overallCount++;
+        }
+        const avgOverall = overallCount > 0 ? overallSum / overallCount : 0;
+
+
+        return {
+            overall: avgOverall,
+            breakfast: avgBreakfast,
+            lunch: avgLunch,
+            dinner: avgDinner,
+            combo: avgCombo,
+            totalReviews: totalSubmissions
+        };
+    };
+
+    /** Creates the 5-star rating HTML element. */
+    const createRatingInput = (id, label) => {
+        const container = document.createElement('div');
+        container.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white rounded-lg border';
+        
+        const labelEl = document.createElement('span');
+        labelEl.className = 'text-base font-medium text-gray-700 mb-1 sm:mb-0';
+        labelEl.textContent = label;
+        
+        const ratingEl = document.createElement('div');
+        ratingEl.className = 'flex space-x-1';
+        ratingEl.id = `rating-${id}`;
+        ratingEl.setAttribute('data-rating', '0');
+
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            star.className = 'star-rating text-gray-300 w-6 h-6';
+            star.setAttribute('data-value', i);
+            star.setAttribute('data-lucide', 'star');
+            star.onclick = () => setRating(id, i);
+            ratingEl.appendChild(star);
+        }
+
+        container.appendChild(labelEl);
+        container.appendChild(ratingEl);
+        return container.outerHTML;
+    };
+
+    /** Updates the visual star rating based on user selection. */
+    const setRating = (id, value) => {
+        const ratingEl = document.getElementById(`rating-${id}`);
+        if (!ratingEl) return;
+        ratingEl.setAttribute('data-rating', value);
+        
+        const stars = ratingEl.querySelectorAll('.star-rating');
+        stars.forEach(star => {
+            const starValue = parseInt(star.getAttribute('data-value'));
+            star.classList.remove('active', 'fill-current');
+            star.classList.add('text-gray-300');
+            if (starValue <= value) {
+                star.classList.add('active', 'fill-current', 'text-yellow-400');
+                star.classList.remove('text-gray-300');
+            } else {
+                star.classList.remove('active', 'fill-current', 'text-yellow-400');
+                star.classList.add('text-gray-300');
+            }
+        });
+        // Rerender Lucide icons for filled state if necessary (handled by classes above)
+        lucide.createIcons(); 
+    };
+
+    /** Creates the detailed input group with a Dish Name field. Used for Veg-1/Veg-2. */
+    const createDetailedInput = (id, label) => {
+        const html = `
+            <div class="p-3 bg-white rounded-lg border space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between">
+                    <span class="text-base font-medium text-gray-700 mb-1 sm:mb-0">${label}</span>
+                    <div id="rating-${id}" data-rating="0" class="flex space-x-1">
+                        ${[1, 2, 3, 4, 5].map(i => `
+                            <i data-lucide="star" data-value="${i}" 
+                               class="star-rating text-gray-300 w-6 h-6" 
+                               onclick="window.setRating('${id}', ${i})"></i>
+                        `).join('')}
+                    </div>
+                </div>
+                <input type="text" id="${id}-dish" placeholder="Enter Dish Name" maxlength="50"
+                       class="block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <textarea id="${id}-comment" rows="1" maxlength="250" placeholder="Comment (Optional, max 50 words)" 
+                          class="block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+        `;
+        return html;
+    };
+    
+    /** Creates a simpler detailed input group (rating + comment ONLY). Used for Rice/Dal/Salad etc. */
+    const createSimpleMealInput = (id, label) => {
+        const html = `
+            <div class="p-3 bg-white rounded-lg border space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between">
+                    <span class="text-base font-medium text-gray-700 mb-1 sm:mb-0">${label}</span>
+                    <div id="rating-${id}" data-rating="0" class="flex space-x-1">
+                        ${[1, 2, 3, 4, 5].map(i => `
+                            <i data-lucide="star" data-value="${i}" 
+                               class="star-rating text-gray-300 w-6 h-6" 
+                               onclick="window.setRating('${id}', ${i})"></i>
+                        `).join('')}
+                    </div>
+                </div>
+                <!-- Dish name field omitted for standard items -->
+                <textarea id="${id}-comment" rows="1" maxlength="250" placeholder="Comment (Optional, max 50 words)" 
+                          class="block w-full rounded-lg border-gray-300 shadow-sm p-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+        `;
+        return html;
+    };
+
+
+    // --- Firestore Functions ---
+
+    /** Initializes Firebase and signs in the user. */
+    const initFirebase = async () => {
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    currentDateElement.textContent = formatDateEN(todayISODate);
+                    setupForm(userId);
+                    loadPastFeedback();
+                    listenForTodayRatings(); // Start listening for today's ratings
+                    mainApp.classList.remove('hidden');
+                    loadingIndicator.classList.add('hidden');
+                } else {
+                    console.error("Authentication failed or user logged out.");
+                }
+            });
+
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            loadingIndicator.innerHTML = '<p class="text-red-600">Error loading Firebase. Please try again.</p>';
+        }
+    };
+    
+    /** Checks if the user has already submitted feedback for today. */
+    const checkIfSubmitted = async (uId) => {
+        const submissionId = `${uId}_${todayISODate}`;
+        const docRef = doc(db, PUBLIC_COLLECTION_PATH, submissionId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists();
+    };
+
+    /** Saves the user's feedback to Firestore. */
+    const saveFeedback = async (data, uId) => {
+        const submissionId = `${uId}_${todayISODate}`;
+        const docRef = doc(db, PUBLIC_COLLECTION_PATH, submissionId);
+
+        try {
+            await setDoc(docRef, {
+                userId: uId,
+                userName: data.userName,
+                date: todayISODate,
+                ...data.meals,
+                submittedTimestamp: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error("Error saving document: ", error);
+            return false;
+        }
+    };
+
+    /** Listens for all feedback submitted today and updates the summary section. */
+    const listenForTodayRatings = () => {
+        const q = query(
+            collection(db, PUBLIC_COLLECTION_PATH),
+            where('date', '==', todayISODate)
+        );
+
+        onSnapshot(q, (snapshot) => {
+            const feedbackArray = [];
+            snapshot.forEach((doc) => {
+                feedbackArray.push(doc.data());
+            });
+
+            if (feedbackArray.length > 0) {
+                const averages = calculateAverages(feedbackArray);
+                renderTodaySummary(averages);
+            } else {
+                renderTodaySummary({
+                    overall: 0,
+                    breakfast: 0,
+                    lunch: 0,
+                    dinner: 0,
+                    combo: 0,
+                    totalReviews: 0
+                });
+            }
+
+        }, (error) => {
+            console.error("Error listening for today's ratings: ", error);
+        });
+    };
+
+    /** Renders the real-time summary of today's ratings in the UI. */
+    const renderTodaySummary = (averages) => {
+        // Grand Overall Average
+        overallRatingDisplay.textContent = averages.overall.toFixed(1);
+        
+        // Total Reviews Count
+        reviewCountDisplay.textContent = `${averages.totalReviews} ${averages.totalReviews === 1 ? 'Review' : 'Reviews'}`;
+        
+        // Individual Meal Averages
+        summaryBreakfast.textContent = averages.breakfast.toFixed(1);
+        summaryLunch.textContent = averages.lunch.toFixed(1);
+        summaryDinner.textContent = averages.dinner.toFixed(1);
+        
+        if (isSunday) {
+            summaryCombo.textContent = 'N/A';
+            summaryCombo.classList.add('text-gray-500');
+            summaryCombo.classList.remove('text-red-600');
+        } else {
+            summaryCombo.textContent = averages.combo.toFixed(1);
+            summaryCombo.classList.remove('text-gray-500');
+            summaryCombo.classList.add('text-red-600');
+        }
+    };
+
+    // --- UI Logic ---
+
+    /** Populates the form fields and checks submission status. */
+    const setupForm = async (uId) => {
+        // 1. Initial Name Setup
+        if (userName) {
+            userNameInput.value = userName;
+        }
+        
+        // 2. Meal Section Setup (Breakfast)
+        document.getElementById('breakfast-rating-container').innerHTML = `
+            ${createRatingInput('breakfast', 'Breakfast Quality (Overall)')}
+            ${createRatingInput('tea', 'Tea/Coffee Quality')}
+        `;
+        
+        // 3. Meal Section Setup (Lunch/Dinner)
+        const generateMealHTML = (mealType) => {
+            return MEAL_ITEMS_CONFIG.map(item => {
+                const id = `${mealType}-${item.id}`;
+                if (item.needsDishName) {
+                    return createDetailedInput(id, item.label);
+                } else {
+                    return createSimpleMealInput(id, item.label);
+                }
+            }).join('');
+        }
+
+        document.getElementById('lunch-rating-container').innerHTML = generateMealHTML('lunch');
+        document.getElementById('dinner-rating-container').innerHTML = generateMealHTML('dinner');
+
+        // 4. Meal Section Setup (Combo)
+        if (isSunday) {
+            document.getElementById('combo-section').innerHTML = `
+                <div class="p-4 text-center text-red-600 font-semibold bg-red-100 rounded-xl">
+                    Today is Sunday. Combo feedback is not available.
+                </div>
+            `;
+        } else {
+            document.getElementById('combo-rating-container').innerHTML = createRatingInput('combo', 'Combo Quality (Overall)');
+        }
+        
+        // Rerender Lucide Icons
+        lucide.createIcons();
+        
+        // 5. Check Submission Status
+        const alreadySubmitted = await checkIfSubmitted(uId);
+        if (alreadySubmitted) {
+            submitButton.disabled = true;
+            submissionStatus.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+            submissionStatus.classList.add('bg-blue-500');
+            submissionStatus.textContent = 'You have already submitted feedback for today. Thank you!';
+        }
+    };
+    
+    /** Handles form submission */
+    document.getElementById('feedback-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const name = userNameInput.value.trim();
+        if (!name) {
+            showStatus('Please enter your name.', 'bg-red-500');
+            userNameInput.focus();
+            return;
+        }
+        
+        // Cache name
+        userName = name;
+        localStorage.setItem('feedbackUserName', name);
+
+        // Check if already submitted again (safety check)
+        if (await checkIfSubmitted(userId)) {
+             showStatus('You have already submitted feedback for today.', 'bg-red-500');
+             submitButton.disabled = true;
+             return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+        showStatus('Feedback is being submitted...', 'bg-yellow-500');
+
+        const formData = { userName: name, meals: {} };
+        let allRatingsProvided = true;
+
+        // Helper function to get rating
+        const getRating = (id) => {
+            const ratingEl = document.getElementById(`rating-${id}`);
+            const rating = parseInt(ratingEl?.getAttribute('data-rating') || '0');
+            if (rating === 0) allRatingsProvided = false;
+            return rating;
+        };
+
+        // --- Breakfast Data ---
+        formData.meals.breakfast = {
+            rating: getRating('breakfast'),
+            tea: getRating('tea'),
+            comment: document.getElementById('breakfast-comment').value.trim().substring(0, 250) // 50 words approx
+        };
+
+        // --- Lunch and Dinner Data ---
+        const detailedMeals = ['lunch', 'dinner'];
+        
+        detailedMeals.forEach(meal => {
+            formData.meals[meal] = {};
+            MEAL_ITEMS_CONFIG.forEach(item => {
+                const id = `${meal}-${item.id}`;
+                
+                // Only collect the 'dish' name if the field was generated (needsDishName: true)
+                const dishName = item.needsDishName 
+                    ? document.getElementById(`${id}-dish`)?.value.trim().substring(0, 50) || ''
+                    : ''; 
+                    
+                formData.meals[meal][item.id] = {
+                    rating: getRating(id),
+                    dish: dishName,
+                    comment: document.getElementById(`${id}-comment`)?.value.trim().substring(0, 250) || ''
+                };
+            });
+        });
+
+        // --- Combo Data ---
+        if (!isSunday) {
+            formData.meals.combo = {
+                rating: getRating('combo'),
+                comment: document.getElementById('combo-comment').value.trim().substring(0, 250)
+            };
+            if (formData.meals.combo.rating === 0) allRatingsProvided = false;
+        } else {
+             formData.meals.combo = { rating: 0, comment: 'Not available on Sunday' };
+        }
+
+
+        // Final check for mandatory ratings
+        if (allRatingsProvided === false) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit Feedback'; // Revert text
+            showStatus('All mandatory ratings (stars) are required.', 'bg-red-500');
+            return;
+        }
+        
+        // Save to Firestore
+        const success = await saveFeedback(formData, userId);
+
+        if (success) {
+            showStatus('Feedback submitted successfully!', 'bg-green-500');
+            // Hide name input since submission is successful
+            nameInputContainer.classList.add('hidden');
+            // Disable the form
+            submitButton.disabled = true;
+            submitButton.textContent = 'Today\'s Feedback Submitted'; // Revert text
+        } else {
+            showStatus('Error in submission. Please try again.', 'bg-red-500');
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit Feedback'; // Revert text
+        }
+        
+        // Reload past feedback to update averages
+        loadPastFeedback();
+    };
+
+    /** Displays temporary status messages. */
+    const showStatus = (message, className) => {
+        submissionStatus.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500');
+        submissionStatus.classList.add(className);
+        submissionStatus.textContent = message;
+        setTimeout(() => {
+            submissionStatus.classList.add('hidden');
+        }, 5000);
+    };
+
+    /** --- Previous Days' Results Logic --- */
+
+    /** Fetches and calculates averages for past days. */
+    const loadPastFeedback = () => {
+        const q = query(
+            collection(db, PUBLIC_COLLECTION_PATH),
+            where('date', '<', todayISODate), // Only past days
+            orderBy('date', 'desc')
+        );
+
+        onSnapshot(q, (snapshot) => {
+            const feedbackByDate = {};
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const date = data.date;
+
+                if (!feedbackByDate[date]) {
+                    feedbackByDate[date] = [];
+                }
+                feedbackByDate[date].push(data);
+            });
+
+            renderPastResults(feedbackByDate);
+        }, (error) => {
+            console.error("Error loading past feedback: ", error);
+        });
+    };
+
+    /** Renders the list of past days with average ratings. */
+    const renderPastResults = (feedbackByDate) => {
+        const listContainer = document.getElementById('past-results-list');
+        listContainer.innerHTML = '';
+
+        const dates = Object.keys(feedbackByDate).sort().reverse();
+        if (dates.length === 0) {
+            document.getElementById('no-past-data').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('no-past-data').classList.add('hidden');
+
+        dates.forEach(date => {
+            const feedbackArray = feedbackByDate[date];
+            const totalSubmissions = feedbackArray.length;
+            const avgRatings = calculateAverages(feedbackArray);
+
+            const listItem = document.createElement('div');
+            listItem.className = 'bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors';
+            listItem.onclick = () => showCommentsModal(date, feedbackArray);
+            
+            listItem.innerHTML = `
+                <div class="flex justify-between items-center border-b pb-2 mb-2">
+                    <h4 class="text-lg font-bold text-gray-800">${formatDateEN(date)}</h4>
+                    <span class="text-sm font-medium text-gray-500">${totalSubmissions} Responses</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <p class="font-medium text-gray-600">Breakfast (B): <span class="text-blue-600 font-semibold">${avgRatings.breakfast.toFixed(1)} <i data-lucide="star" class="w-4 h-4 inline-block fill-current text-yellow-400"></i></span></p>
+                    <p class="font-medium text-gray-600">Lunch (L): <span class="text-green-600 font-semibold">${avgRatings.lunch.toFixed(1)} <i data-lucide="star" class="w-4 h-4 inline-block fill-current text-yellow-400"></i></span></p>
+                    <p class="font-medium text-gray-600">Dinner (D): <span class="text-indigo-600 font-semibold">${avgRatings.dinner.toFixed(1)} <i data-lucide="star" class="w-4 h-4 inline-block fill-current text-yellow-400"></i></span></p>
+                    <p class="font-medium text-gray-600">Combo (C): <span class="text-red-600 font-semibold">${avgRatings.combo.toFixed(1)} <i data-lucide="star" class="w-4 h-4 inline-block fill-current text-yellow-400"></i></span></p>
+                </div>
+            `;
+            listContainer.appendChild(listItem);
+        });
+        lucide.createIcons();
+    };
+    
+
+
+    /** --- Modal Logic (Admin View) --- */
+
+    let currentComments = [];
+    let isNameVisible = false;
+
+    const showCommentsModal = (date, feedbackArray) => {
+        currentComments = feedbackArray;
+        isNameVisible = false;
+
+        document.getElementById('modal-date').textContent = formatDateEN(date);
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-error').classList.add('hidden');
+
+        renderComments(false); // Render initially with names hidden
+        
+        document.getElementById('comment-modal').classList.remove('hidden');
+        document.getElementById('comment-modal').classList.add('flex');
+    };
+
+    const renderComments = (showName) => {
+        const container = document.getElementById('modal-comments-container');
+        container.innerHTML = '';
+        
+        if (currentComments.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500">No comments for this day.</p>';
+            return;
+        }
+
+        const mealSections = ['breakfast', 'lunch', 'dinner', 'combo'];
+        const mealNames = { 'breakfast': 'Breakfast', 'lunch': 'Lunch', 'dinner': 'Dinner', 'combo': 'Combo' };
+        
+        mealSections.forEach(meal => {
+            const comments = [];
+            currentComments.forEach(data => {
+                const userName = showName ? data.userName : 'Anonymous User';
+                let commentText = '';
+                
+                if (meal === 'breakfast' && data.breakfast.comment) {
+                    commentText = data.breakfast.comment;
+                } else if (meal === 'combo' && data.combo.comment) {
+                    commentText = data.combo.comment;
+                } else if (meal === 'lunch' || meal === 'dinner') {
+                    // Check detailed items for comments
+                    MEAL_ITEMS_CONFIG.forEach(itemConfig => {
+                        const itemKey = itemConfig.id;
+                        const item = data[meal][itemKey];
+                        
+                        let tempComment = '';
+                        if (itemConfig.needsDishName && item.dish) {
+                             tempComment += `[${itemKey} Dish: ${item.dish}] `;
+                        }
+                        if (item.comment) {
+                            tempComment += item.comment;
+                        }
+                        
+                        if (tempComment) {
+                            commentText += `(${itemKey}): ${tempComment.trim()} | `;
+                        }
+                    });
+                    commentText = commentText.trim().replace(/\|$/, '').trim(); // Clean up trailing pipe
+                }
+
+                if (commentText) {
+                    comments.push({ name: userName, text: commentText });
+                }
+            });
+
+            if (comments.length > 0) {
+                const mealTitle = document.createElement('h4');
+                mealTitle.className = 'text-lg font-semibold text-blue-700 mt-4 border-b border-blue-100 pb-1';
+                mealTitle.textContent = mealNames[meal];
+                container.appendChild(mealTitle);
+                
+                comments.forEach(c => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'p-3 bg-white border border-gray-200 rounded-lg shadow-sm';
+                    commentEl.innerHTML = `
+                        <p class="font-bold ${showName ? 'text-purple-600' : 'text-gray-500'}">${c.name}</p>
+                        <p class="text-gray-700 mt-1 whitespace-pre-wrap">${c.text}</p>
+                    `;
+                    container.appendChild(commentEl);
+                });
+            }
+        });
+        
+        if (container.innerHTML === '') {
+            container.innerHTML = '<p class="text-center text-gray-500">No comments for this day.</p>';
+        }
+    };
+
+    document.getElementById('close-modal').onclick = () => {
+        document.getElementById('comment-modal').classList.add('hidden');
+        document.getElementById('comment-modal').classList.remove('flex');
+    };
+    
+    document.getElementById('submit-admin-password').onclick = () => {
+        const passwordInput = document.getElementById('admin-password');
+        const errorEl = document.getElementById('admin-error');
+        
+        if (passwordInput.value === ADMIN_PASSWORD) {
+            isNameVisible = true;
+            renderComments(true);
+            errorEl.classList.add('hidden');
+        } else {
+            errorEl.classList.remove('hidden');
+        }
+    };
+    
+    // --- Event Listeners and Initializers ---
+
+    // Tab Switching
+    document.getElementById('tab-today').onclick = () => {
+        feedbackSection.classList.remove('hidden');
+        resultsSection.classList.add('hidden');
+        document.getElementById('tab-today').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('tab-previous').classList.remove('bg-blue-600', 'text-white');
+        document.getElementById('tab-previous').classList.add('text-gray-700');
+    };
+
+    document.getElementById('tab-previous').onclick = () => {
+        feedbackSection.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+        document.getElementById('tab-previous').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('tab-today').classList.remove('bg-blue-600', 'text-white');
+        document.getElementById('tab-today').classList.add('text-gray-700');
+    };
+
+    // Meal Section Collapsibles
+    document.querySelectorAll('.meal-group').forEach(group => {
+        const header = group.querySelector('.meal-header');
+        const content = group.querySelector('.meal-content');
+        const icon = group.querySelector('[data-lucide="chevron-down"]');
+
+        // Initially open the first section (Breakfast)
+        if (group.id === 'breakfast-section') {
+            content.classList.add('open');
+            header.classList.add('rounded-b-none');
+            icon.classList.add('rotate-180');
+        }
+
+        header.onclick = () => {
+            const isOpen = content.classList.toggle('open');
+            header.classList.toggle('rounded-b-none', isOpen);
+            icon.classList.toggle('rotate-180', isOpen);
+        };
+    });
+    
+    // Expose setRating globally for onClick in dynamically generated HTML
+    window.setRating = setRating;
+    
+    // Initialize the app
+    initFirebase();
+    
+</script>
